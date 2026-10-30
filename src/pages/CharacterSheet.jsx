@@ -4,6 +4,8 @@ import VitalStatsSection from '../components/sheet/VitalStatsSection';
 import ResourcesSection from '../components/sheet/ResourcesSection';
 import AbilitiesSection from '../components/sheet/AbilitiesSection';
 import SkillsSection from '../components/sheet/SkillsSection';
+import ConditionsSection from '../components/sheet/ConditionsSection';
+import ActionsSection from '../components/sheet/ActionsSection';
 
 export default function CharacterSheet() {
   const { id } = useParams();
@@ -23,6 +25,8 @@ export default function CharacterSheet() {
       <ResourcesSection personaggioId={id} />
       <AbilitiesSection personaggioId={id} />
       <SkillsSection personaggioId={id} />
+      <ConditionsSection personaggioId={id} />
+      <ActionsSection personaggioId={id} />
     </div>
   );
 }
