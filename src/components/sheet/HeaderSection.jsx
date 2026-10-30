@@ -45,14 +45,7 @@ export default function HeaderSection({ personaggioId }) {
   // --- MODALITÀ MODIFICA ---
   if (isEditing) {
     return (
-      <div
-        className="fantasy-card mb-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #1a1410 0%, #0f0f13 50%, #1a1410 100%)',
-          border: '2px solid #8a6d1c',
-          boxShadow: '0 0 15px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
-        }}
-      >
+      <div className="fantasy-card mb-4 relative overflow-hidden">
         {/* Cornici decorative angoli */}
         <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
         <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
@@ -109,23 +102,16 @@ export default function HeaderSection({ personaggioId }) {
     );
   }
 
-  // --- MODALITÀ VISUALIZZAZIONE (coerente con CharacterCard) ---
+  // --- MODALITÀ VISUALIZZAZIONE ---
   return (
-    <div
-      className="fantasy-card mb-4 relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #1a1410 0%, #0f0f13 50%, #1a1410 100%)',
-        border: '2px solid #8a6d1c',
-        boxShadow: '0 0 15px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
-      }}
-    >
+    <div className="fantasy-card mb-4 relative overflow-hidden">
       {/* Cornici decorative angoli */}
       <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
       <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
       <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
       <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
 
-      {/* Pulsanti Azione (Modifica/Elimina) */}
+      {/* Pulsanti Azione */}
       <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex gap-1 sm:gap-2 z-20">
         <button 
           onClick={() => setIsEditing(true)} 
@@ -179,19 +165,13 @@ export default function HeaderSection({ personaggioId }) {
 
         {/* COLONNA 2: Info Personaggio */}
         <div className="flex-1 min-w-0 flex flex-col justify-center pr-10 sm:pr-12">
-          
-          {/* Nome */}
           <h1 className="text-xl sm:text-3xl md:text-4xl font-fantasy text-fantasy-gold truncate drop-shadow-lg leading-tight"
               style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
             {personaggio.nome || 'Senza Nome'}
           </h1>
-
-          {/* Razza • Classe • Background */}
           <p className="font-fantasy text-yellow-600 text-xs sm:text-base md:text-lg mt-0.5 sm:mt-1 truncate">
             {personaggio.identita.razza || 'Razza ?'} • {personaggio.identita.classe || 'Classe ?'}{personaggio.identita.background ? ` • ${personaggio.identita.background}` : ''}
           </p>
-
-          {/* Livello testuale (opzionale, per chiarezza) */}
           <p className="font-fantasy text-gray-500 text-[10px] sm:text-xs mt-1 hidden sm:block">
             Livello {personaggio.identita.livello || 1}
           </p>

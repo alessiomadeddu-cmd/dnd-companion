@@ -2,6 +2,10 @@ import { useNavigate } from 'react-router-dom';
 
 export default function CharacterCard({ personaggio, onElimina }) {
   const navigate = useNavigate();
+  
+  // CONTROLLO DI SICUREZZA: evita crash se personaggio è undefined
+  if (!personaggio) return null;
+  
   const { nome, identita, attributi } = personaggio;
 
   const hpPercent = attributi.hpMax > 0 
@@ -14,11 +18,6 @@ export default function CharacterCard({ personaggio, onElimina }) {
     <div
       onClick={() => navigate(`/personaggio/${personaggio.id}`)}
       className="fantasy-card cursor-pointer hover:border-fantasy-gold transition-all duration-300 group relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #1a1410 0%, #0f0f13 50%, #1a1410 100%)',
-        border: '2px solid #8a6d1c',
-        boxShadow: '0 0 15px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
-      }}
     >
       {/* Cornici decorative angoli */}
       <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
@@ -68,7 +67,7 @@ export default function CharacterCard({ personaggio, onElimina }) {
         {/* COLONNA 2: 3 Righe verticali */}
         <div className="flex-1 min-w-0 flex flex-col justify-between h-20 sm:h-28 md:h-32">
           
-          {/* RIGA 1: Nome (in alto) */}
+          {/* RIGA 1: Nome */}
           <h2 className="text-lg sm:text-2xl md:text-3xl font-fantasy text-fantasy-gold truncate drop-shadow-lg leading-tight"
               style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
             {nome || 'Senza Nome'}
@@ -79,10 +78,10 @@ export default function CharacterCard({ personaggio, onElimina }) {
             {identita.razza || 'Razza ?'} • {identita.classe || 'Classe ?'}
           </p>
 
-          {/* RIGA 3: HP + CA + Init sulla stessa riga */}
+          {/* RIGA 3: HP + CA + Init */}
           <div className="flex gap-1 sm:gap-2 mt-auto">
             
-            {/* HP Box - ESPANSO (flex-[4] = ~66% dello spazio) */}
+            {/* HP Box */}
             <div className="flex-[4] bg-fantasy-900 border border-fantasy-700 rounded p-1 sm:p-1.5 flex items-center gap-1 relative overflow-hidden"
                  style={{ boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)' }}>
               <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 text-red-600" viewBox="0 0 24 24" fill="currentColor">
@@ -102,7 +101,7 @@ export default function CharacterCard({ personaggio, onElimina }) {
               </div>
             </div>
 
-            {/* CA Box - RIDOTTO (flex-1 = ~17% dello spazio) */}
+            {/* CA Box */}
             <div className="flex-1 bg-fantasy-900 border border-fantasy-700 rounded p-1 sm:p-1.5 flex items-center gap-1"
                  style={{ boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)' }}>
               <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
@@ -114,7 +113,7 @@ export default function CharacterCard({ personaggio, onElimina }) {
               </div>
             </div>
 
-            {/* Iniziativa Box - RIDOTTO (flex-1 = ~17% dello spazio) */}
+            {/* Iniziativa Box */}
             <div className="flex-1 bg-fantasy-900 border border-fantasy-700 rounded p-1 sm:p-1.5 flex items-center gap-1"
                  style={{ boxShadow: 'inset 0 0 5px rgba(0,0,0,0.5)' }}>
               <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
