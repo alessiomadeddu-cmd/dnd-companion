@@ -8,6 +8,16 @@ export default function VitalStatsSection({ personaggioId }) {
 
   if (!personaggio) return null;
 
+  const { hpAttuali, hpMax, ca, iniziativa, velocita } = personaggio.attributi;
+
+  // Calcolo percentuale HP
+  const hpPercent = hpMax > 0 
+    ? Math.min(100, Math.max(0, (hpAttuali / hpMax) * 100)) 
+    : 0;
+  
+  // Barra rossa sotto il 10%, oro sopra (come da tuo feedback)
+  const barColor = hpPercent < 10 ? 'bg-red-600' : 'bg-fantasy-gold';
+
   const modificaAttributo = (campo, delta) => {
     const nuovoValore = Math.max(0, personaggio.attributi[campo] + delta);
     aggiornaPersonaggio(personaggioId, {
@@ -22,10 +32,17 @@ export default function VitalStatsSection({ personaggioId }) {
   };
 
   return (
-    <div className="fantasy-card mb-4">
+    <div className="fantasy-card mb-4 relative overflow-hidden">
+      {/* Cornici decorative angoli */}
+      <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
+
+      {/* Header Collassabile */}
       <button 
         onClick={() => setIsOpen(!isOpen)} 
-        className="w-full flex justify-between items-center border-b border-fantasy-700 pb-2 mb-2 focus:outline-none"
+        className="w-full flex justify-between items-center border-b border-fantasy-700 pb-2 mb-3 focus:outline-none relative z-10"
       >
         <h2 className="text-lg font-fantasy text-fantasy-gold">Dati Vitali</h2>
         <span className={`text-fantasy-gold transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
@@ -34,62 +51,181 @@ export default function VitalStatsSection({ personaggioId }) {
       </button>
       
       {isOpen && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="col-span-2 md:col-span-2 bg-fantasy-900 p-3 rounded-lg border border-fantasy-700">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-xs text-gray-400 uppercase">HP Attuali</label>
-              <span className="text-xs text-gray-500">Max: {personaggio.attributi.hpMax}</span>
+        <div className="space-y-4">
+          
+          {/* === RIGA HP: Barra di Progresso con Bottoni Cuore === */}
+          <div className="bg-fantasy-900 border border-fantasy-700 rounded-lg p-3 relative"
+               style={{ boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
+            
+            <div className="flex items-center gap-3">
+              {/* Bottone - (Cuore dorato con meno) */}
+              <button 
+                onClick={() => modificaAttributo('hpAttuali', -1)}
+                className="flex-shrink-0 w-12 h-12 rounded-lg bg-fantasy-800 hover:bg-fantasy-700 transition-colors flex items-center justify-center"
+                aria-label="Riduci HP"
+              >
+                <svg className="w-8 h-8 text-fantasy-gold" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  <path d="M9 8.5h6" stroke="#0f0f13" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+
+              {/* Barra di Progresso Centrale */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-xs text-gray-400 uppercase tracking-wider">HP Attuali</span>
+                  <span className="text-xs text-gray-500">Max: {hpMax}</span>
+                </div>
+                
+                {/* Valore attuale grande al centro */}
+                <div className="text-3xl font-bold text-white text-center leading-tight font-fantasy">
+                  {hpAttuali}
+                </div>
+                
+                {/* Barra di progresso */}
+                <div className="mt-2 h-2 bg-fantasy-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${barColor} transition-all duration-500`}
+                    style={{ width: `${hpPercent}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Bottone + (Cuore dorato con più) */}
+              <button 
+                onClick={() => modificaAttributo('hpAttuali', 1)}
+                className="flex-shrink-0 w-12 h-12 rounded-lg bg-fantasy-800 hover:bg-fantasy-700 transition-colors flex items-center justify-center"
+                aria-label="Aumenta HP"
+              >
+                <svg className="w-8 h-8 text-fantasy-gold" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  <path d="M9 8.5h6M12 5.5v6" stroke="#0f0f13" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
-            <div className="flex items-center justify-between">
-              <button onClick={() => modificaAttributo('hpAttuali', -1)} className="fantasy-btn px-3 py-1 text-sm bg-fantasy-danger text-white hover:bg-red-700">-</button>
-              <input
-                type="number"
-                value={personaggio.attributi.hpAttuali}
-                onChange={(e) => setAttributo('hpAttuali', parseInt(e.target.value) || 0)}
-                className="w-16 text-center bg-transparent text-2xl font-bold text-white focus:outline-none"
-              />
-              <button onClick={() => modificaAttributo('hpAttuali', 1)} className="fantasy-btn px-3 py-1 text-sm bg-fantasy-success text-white hover:bg-green-700">+</button>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <label className="text-xs text-gray-400">Temp:</label>
+
+            {/* HP Temporanei */}
+            <div className="mt-3 pt-3 border-t border-fantasy-700 flex items-center gap-2">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">Temp:</label>
+              <button 
+                onClick={() => modificaAttributo('hpTemporanei', -1)}
+                className="w-7 h-7 rounded bg-fantasy-700 text-gray-300 hover:bg-fantasy-600 transition-colors flex items-center justify-center text-sm"
+              >
+                −
+              </button>
               <input
                 type="number"
                 value={personaggio.attributi.hpTemporanei}
                 onChange={(e) => setAttributo('hpTemporanei', parseInt(e.target.value) || 0)}
-                className="w-12 bg-transparent border-b border-fantasy-700 text-center text-sm text-gray-300 focus:outline-none"
+                className="w-14 bg-transparent border-b border-fantasy-700 text-center text-sm text-gray-300 focus:outline-none focus:border-fantasy-gold"
               />
+              <button 
+                onClick={() => modificaAttributo('hpTemporanei', 1)}
+                className="w-7 h-7 rounded bg-fantasy-700 text-gray-300 hover:bg-fantasy-600 transition-colors flex items-center justify-center text-sm"
+              >
+                +
+              </button>
             </div>
           </div>
 
-          <div className="bg-fantasy-900 p-3 rounded-lg border border-fantasy-700 flex flex-col items-center justify-center">
-            <label className="text-xs text-gray-400 uppercase mb-1">CA</label>
-            <input
-              type="number"
-              value={personaggio.attributi.ca}
-              onChange={(e) => setAttributo('ca', parseInt(e.target.value) || 10)}
-              className="w-full text-center bg-transparent text-3xl font-bold text-white focus:outline-none"
-            />
-          </div>
+          {/* === GRIGLIA CA / INIZIATIVA / VELOCITÀ (Layout 2x2) === */}
+          <div className="grid grid-cols-3 gap-2">
+            
+            {/* CA Box */}
+            <div className="bg-fantasy-900 border border-fantasy-700 rounded-lg p-2 flex flex-col relative"
+                 style={{ boxShadow: 'inset 0 0 8px rgba(0,0,0,0.5)' }}>
+              <div className="grid grid-cols-2 gap-2 items-center">
+                {/* Top Left: Icona + Label */}
+                <div className="flex items-center gap-1">
+                  <svg className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                  </svg>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">CA</span>
+                </div>
+                {/* Top Right: Bottone + */}
+                <button 
+                  onClick={() => modificaAttributo('ca', 1)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  +
+                </button>
 
-          <div className="bg-fantasy-900 p-3 rounded-lg border border-fantasy-700 flex flex-col items-center justify-center">
-            <label className="text-xs text-gray-400 uppercase mb-1">Iniziativa</label>
-            <input
-              type="number"
-              value={personaggio.attributi.iniziativa}
-              onChange={(e) => setAttributo('iniziativa', parseInt(e.target.value) || 0)}
-              className="w-full text-center bg-transparent text-3xl font-bold text-white focus:outline-none"
-            />
-          </div>
+                {/* Bottom Left: Valore Principale */}
+                <span className="text-2xl font-bold text-white font-fantasy leading-tight">{ca}</span>
+                {/* Bottom Right: Bottone - */}
+                <button 
+                  onClick={() => modificaAttributo('ca', -1)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  −
+                </button>
+              </div>
+            </div>
 
-          <div className="col-span-2 md:col-span-2 bg-fantasy-900 p-3 rounded-lg border border-fantasy-700 flex items-center justify-between">
-            <label className="text-xs text-gray-400 uppercase">Velocità</label>
-            <input
-              type="number"
-              value={personaggio.attributi.velocita}
-              onChange={(e) => setAttributo('velocita', parseInt(e.target.value) || 30)}
-              className="w-20 text-right bg-transparent text-xl font-bold text-white focus:outline-none"
-            />
-            <span className="text-gray-500 text-sm">ft.</span>
+            {/* Iniziativa Box */}
+            <div className="bg-fantasy-900 border border-fantasy-700 rounded-lg p-2 flex flex-col relative"
+                 style={{ boxShadow: 'inset 0 0 8px rgba(0,0,0,0.5)' }}>
+              <div className="grid grid-cols-2 gap-2 items-center">
+                {/* Top Left: Icona + Label */}
+                <div className="flex items-center gap-1">
+                  <svg className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">Init</span>
+                </div>
+                {/* Top Right: Bottone + */}
+                <button 
+                  onClick={() => modificaAttributo('iniziativa', 1)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  +
+                </button>
+
+                {/* Bottom Left: Valore Principale */}
+                <span className="text-2xl font-bold text-white font-fantasy leading-tight">
+                  {iniziativa >= 0 ? `+${iniziativa}` : iniziativa}
+                </span>
+                {/* Bottom Right: Bottone - */}
+                <button 
+                  onClick={() => modificaAttributo('iniziativa', -1)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+
+            {/* Velocità Box */}
+            <div className="bg-fantasy-900 border border-fantasy-700 rounded-lg p-2 flex flex-col relative"
+                 style={{ boxShadow: 'inset 0 0 8px rgba(0,0,0,0.5)' }}>
+              <div className="grid grid-cols-2 gap-2 items-center">
+                {/* Top Left: Icona + Label (Omino che cammina) */}
+                <div className="flex items-center gap-1">
+                  <svg className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/>
+                  </svg>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">Vel</span>
+                </div>
+                {/* Top Right: Bottone + */}
+                <button 
+                  onClick={() => modificaAttributo('velocita', 5)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  +
+                </button>
+
+                {/* Bottom Left: Valore Principale */}
+                <span className="text-2xl font-bold text-white font-fantasy leading-tight">{velocita}</span>
+                {/* Bottom Right: Bottone - */}
+                <button 
+                  onClick={() => modificaAttributo('velocita', -5)}
+                  className="h-8 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-lg font-bold"
+                >
+                  −
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
