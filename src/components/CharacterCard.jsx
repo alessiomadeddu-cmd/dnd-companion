@@ -1,4 +1,83 @@
-// ... (tutto il codice precedente resta uguale fino alla RIGA 3) ...
+import { useNavigate } from 'react-router-dom';
+
+export default function CharacterCard({ personaggio, onElimina }) {
+  const navigate = useNavigate();
+  const { nome, identita, attributi } = personaggio;
+
+  const hpPercent = attributi.hpMax > 0 
+    ? Math.min(100, Math.max(0, (attributi.hpAttuali / attributi.hpMax) * 100)) 
+    : 0;
+  
+  const barColor = hpPercent < 25 ? 'bg-red-600' : 'bg-fantasy-gold';
+
+  return (
+    <div
+      onClick={() => navigate(`/personaggio/${personaggio.id}`)}
+      className="fantasy-card cursor-pointer hover:border-fantasy-gold transition-all duration-300 group relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #1a1410 0%, #0f0f13 50%, #1a1410 100%)',
+        border: '2px solid #8a6d1c',
+        boxShadow: '0 0 15px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
+      }}
+    >
+      {/* Cornici decorative angoli */}
+      <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
+
+      {/* Bottone Elimina */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          onElimina(e, personaggio.id);
+        }}
+        className="absolute top-1 right-1 sm:top-2 sm:right-2 text-gray-600 hover:text-fantasy-danger p-1 sm:p-1.5 rounded-full hover:bg-fantasy-900 transition-colors z-30 opacity-60 group-hover:opacity-100"
+        aria-label="Elimina personaggio"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* === CONTENUTO PRINCIPALE: 2 COLONNE === */}
+      <div className="flex items-center p-2 sm:p-4 gap-2 sm:gap-4">
+        
+        {/* COLONNA 1: Avatar + Stella Livello */}
+        <div className="relative flex-shrink-0">
+          <div className="absolute -inset-0.5 sm:-inset-1 rounded-full bg-gradient-to-br from-fantasy-gold via-yellow-600 to-fantasy-gold opacity-80"></div>
+          <div className="absolute -inset-0.25 sm:-inset-0.5 rounded-full bg-fantasy-900"></div>
+          
+          <div className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-fantasy-800 flex items-center justify-center overflow-hidden border-2 border-fantasy-900">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-fantasy-gold opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+
+          {/* Stella Livello */}
+          <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center drop-shadow-lg z-10">
+            <svg viewBox="0 0 24 24" className="w-full h-full text-fantasy-gold" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span className="absolute text-fantasy-900 font-bold text-[10px] sm:text-xs md:text-sm font-fantasy mt-0.5">
+              {identita.livello || 1}
+            </span>
+          </div>
+        </div>
+
+        {/* COLONNA 2: 3 Righe verticali */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between h-20 sm:h-28 md:h-32">
+          
+          {/* RIGA 1: Nome (in alto) */}
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-fantasy text-fantasy-gold truncate drop-shadow-lg leading-tight"
+              style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+            {nome || 'Senza Nome'}
+          </h2>
+
+          {/* RIGA 2: Razza e Classe */}
+          <p className="font-fantasy text-yellow-600 text-xs sm:text-sm md:text-base truncate mt-0.5 sm:mt-1">
+            {identita.razza || 'Razza ?'} • {identita.classe || 'Classe ?'}
+          </p>
 
           {/* RIGA 3: HP + CA + Init sulla stessa riga */}
           <div className="flex gap-1 sm:gap-2 mt-auto">
@@ -51,3 +130,8 @@
             </div>
 
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
