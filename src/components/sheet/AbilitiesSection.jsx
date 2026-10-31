@@ -2,26 +2,25 @@ import { useState } from 'react';
 import { useCharacterStore } from '../../store/useCharacterStore';
 import { calcolaPunteggioTotale, calcolaModificatore, calcolaBonusTiroSalvezza } from '../../utils/calculations';
 
-const CARATTERISTICHE = ['FOR', 'DES', 'COS', 'INT', 'SAG', 'CAR'];
+const CARATTERISTICHE = [
+  { key: 'FOR', nome: 'Forza' },
+  { key: 'DES', nome: 'Destrezza' },
+  { key: 'COS', nome: 'Costituzione' },
+  { key: 'INT', nome: 'Intelligenza' },
+  { key: 'SAG', nome: 'Saggezza' },
+  { key: 'CAR', nome: 'Carisma' }
+];
 
 export default function AbilitiesSection({ personaggioId }) {
   const aggiornaPersonaggio = useCharacterStore((state) => state.aggiornaPersonaggio);
   const personaggio = useCharacterStore((state) => state.personaggi.find(p => p.id === personaggioId));
-  
-  const [espansi, setEspansi] = useState({});
+  const [isOpen, setIsOpen] = useState(true);
 
   if (!personaggio) return null;
 
-  const toggleEspandi = (char) => {
-    setEspansi(prev => ({ ...prev, [char]: !prev[char] }));
-  };
-
-  const aggiornaPunteggioBase = (caratteristica, nuovoTotale) => {
+  const aggiornaBase = (caratteristica, delta) => {
     const data = personaggio.caratteristiche[caratteristica];
-    // Calcola il base necessario per raggiungere il nuovo totale desiderato
-    const bonusTotali = (data.bonusRazziale || 0) + (data.bonusMagico || 0);
-    const nuovoBase = nuovoTotale - bonusTotali;
-    
+    const nuovoBase = Math.max(1, Math.min(30, (data.punteggioBase || 10) + delta));
     aggiornaPersonaggio(personaggioId, {
       caratteristiche: {
         ...personaggio.caratteristiche,
@@ -31,10 +30,11 @@ export default function AbilitiesSection({ personaggioId }) {
   };
 
   const aggiornaBonus = (caratteristica, campo, valore) => {
+    const data = personaggio.caratteristiche[caratteristica];
     aggiornaPersonaggio(personaggioId, {
       caratteristiche: {
         ...personaggio.caratteristiche,
-        [caratteristica]: { ...personaggio.caratteristiche[caratteristica], [campo]: valore }
+        [caratteristica]: { ...data, [campo]: valore }
       }
     });
   };
@@ -50,78 +50,117 @@ export default function AbilitiesSection({ personaggioId }) {
   };
 
   return (
-    <div className="fantasy-card mb-4">
-      <h2 className="text-lg font-fantasy text-fantasy-gold mb-4 border-b border-fantasy-700 pb-2">
-        Caratteristiche
-      </h2>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {CARATTERISTICHE.map((char) => {
-          const data = personaggio.caratteristiche[char];
-          const punteggioTotale = calcolaPunteggioTotale(data);
-          const modificatore = calcolaModificatore(punteggioTotale);
-          const bonusTS = calcolaBonusTiroSalvezza(data, personaggio.identita.livello);
-          const isEspanso = espansi[char];
+    <div className="fantasy-card mb-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
 
-          return (
-            <div key={char} className="bg-fantasy-900 p-4 rounded-lg border border-fantasy-700 flex flex-col items-center relative">
-              
-              {/* Nome Caratteristica */}
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{char}</h3>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="w-full flex justify-between items-center border-b border-fantasy-700 pb-2 mb-3 focus:outline-none relative z-10"
+      >
+        <h2 className="text-lg font-fantasy text-fantasy-gold">Caratteristiche</h2>
+        <span className={`text-fantasy-gold transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+          ▼
+        </span>
+      </button>
 
-              {/* Punteggio Totale (Grande e Modificabile) */}
-              <input
-                type="number"
-                value={punteggioTotale}
-                onChange={(e) => aggiornaPunteggioBase(char, parseInt(e.target.value) || 10)}
-                className="w-full text-center bg-transparent text-5xl font-bold text-white focus:outline-none border-b-2 border-fantasy-700 focus:border-fantasy-gold transition-colors py-1"
-              />
+      {isOpen && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {CARATTERISTICHE.map(({ key, nome }) => {
+            const data = personaggio.caratteristiche[key];
+            const punteggioTotale = calcolaPunteggioTotale(data);
+            const modificatore = calcolaModificatore(punteggioTotale);
+            const bonusTS = calcolaBonusTiroSalvezza(data, personaggio.identita.livello);
+            const base = data.punteggioBase || 10;
+            const razziale = data.bonusRazziale || 0;
+            const magico = data.bonusMagico || 0;
 
-              {/* Modificatore (Sotto) */}
-              <div className={`text-xl font-bold mt-2 ${modificatore >= 0 ? 'text-fantasy-gold' : 'text-red-500'}`}>
-                {modificatore >= 0 ? `+${modificatore}` : modificatore}
-              </div>
+            return (
+              <div key={key} className="bg-fantasy-900 border border-fantasy-700 rounded-lg p-3 relative"
+                   style={{ boxShadow: 'inset 0 0 8px rgba(0,0,0,0.5)' }}>
+                
+                <div className="text-center mb-2">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{key}</h3>
+                  <p className="text-[10px] text-gray-500">{nome}</p>
+                </div>
 
-              {/* Toggle Dettagli */}
-              <button 
-                onClick={() => toggleEspandi(char)}
-                className="mt-3 text-[10px] text-gray-500 hover:text-fantasy-gold flex items-center gap-1 uppercase tracking-wider"
-              >
-                {isEspanso ? 'Nascondi' : 'Dettagli'}
-                <span className={`transform transition-transform ${isEspanso ? 'rotate-180' : ''}`}>▼</span>
-              </button>
+                <div className="text-center mb-1">
+                  <span className="text-4xl font-bold text-white font-fantasy leading-tight">
+                    {punteggioTotale}
+                  </span>
+                </div>
 
-              {/* Pannello Dettagli (Base/Razziale/Magico) */}
-              {isEspanso && (
-                <div className="mt-3 w-full space-y-2 text-xs animate-fadeIn border-t border-fantasy-800 pt-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-gray-500">Base</label>
-                    <input type="number" value={data.punteggioBase} onChange={(e) => aggiornaBonus(char, 'punteggioBase', parseInt(e.target.value) || 10)} className="w-10 bg-fantasy-800 border border-fantasy-700 rounded text-center text-white focus:border-fantasy-gold focus:outline-none" />
+                <div className={`text-center text-xl font-bold font-fantasy mb-3 ${modificatore >= 0 ? 'text-fantasy-gold' : 'text-red-500'}`}>
+                  {modificatore >= 0 ? `+${modificatore}` : modificatore}
+                </div>
+
+                <div className="space-y-2 border-t border-fantasy-700 pt-2">
+                  
+                  {/* BASE - Editabile */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider w-12">Base</span>
+                    <div className="flex items-center gap-1 flex-1 justify-end">
+                      <button onClick={() => aggiornaBase(key, -1)} className="w-6 h-6 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-xs font-bold">−</button>
+                      <span className="text-sm font-bold text-white w-6 text-center">{base}</span>
+                      <button onClick={() => aggiornaBase(key, 1)} className="w-6 h-6 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-xs font-bold">+</button>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <label className="text-gray-500">Razziale</label>
-                    <input type="number" value={data.bonusRazziale} onChange={(e) => aggiornaBonus(char, 'bonusRazziale', parseInt(e.target.value) || 0)} className="w-10 bg-fantasy-800 border border-fantasy-700 rounded text-center text-white focus:border-fantasy-gold focus:outline-none" />
+
+                  {/* RAZZIALE - Editabile (per gestire razze a scelta come Mezzelfo) */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-fantasy-gold uppercase tracking-wider w-12 flex items-center gap-1">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      Razz.
+                    </span>
+                    <div className="flex items-center gap-1 flex-1 justify-end">
+                      <input
+                        type="number"
+                        value={razziale}
+                        onChange={(e) => aggiornaBonus(key, 'bonusRazziale', parseInt(e.target.value) || 0)}
+                        className="w-10 bg-fantasy-800 border border-fantasy-gold/50 rounded text-center text-fantasy-gold focus:border-fantasy-gold focus:outline-none text-sm font-bold"
+                        title="Bonus di Razza (modificabile per razze a scelta)"
+                      />
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <label className="text-gray-500">Magico</label>
-                    <input type="number" value={data.bonusMagico} onChange={(e) => aggiornaBonus(char, 'bonusMagico', parseInt(e.target.value) || 0)} className="w-10 bg-fantasy-800 border border-fantasy-700 rounded text-center text-white focus:border-fantasy-gold focus:outline-none" />
+
+                  {/* MAGICO - Editabile */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider w-12">Mag.</span>
+                    <div className="flex items-center gap-1 flex-1 justify-end">
+                      <button onClick={() => aggiornaBonus(key, 'bonusMagico', magico - 1)} className="w-6 h-6 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-xs font-bold">−</button>
+                      <span className={`text-sm font-bold w-6 text-center ${magico > 0 ? 'text-fantasy-gold' : magico < 0 ? 'text-red-500' : 'text-white'}`}>{magico >= 0 ? `+${magico}` : magico}</span>
+                      <button onClick={() => aggiornaBonus(key, 'bonusMagico', magico + 1)} className="w-6 h-6 rounded bg-fantasy-700 text-fantasy-gold hover:bg-fantasy-600 transition-colors flex items-center justify-center text-xs font-bold">+</button>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Tiro Salvezza */}
-              <div className="mt-3 pt-2 border-t border-fantasy-700 w-full flex justify-between items-center">
-                <span className="text-xs text-gray-400">TS: <span className="text-white font-bold ml-1">{bonusTS >= 0 ? `+${bonusTS}` : bonusTS}</span></span>
-                <div className="flex gap-1">
-                  <button onClick={() => toggleCompetenza(char, 'competenzaTS')} className={`w-5 h-5 rounded border flex items-center justify-center text-[10px] ${data.competenzaTS ? 'bg-fantasy-gold border-fantasy-gold text-fantasy-900' : 'border-fantasy-700 text-gray-500'}`} title="Competente">✓</button>
-                  <button onClick={() => toggleCompetenza(char, 'maestriaTS')} className={`w-5 h-5 rounded border flex items-center justify-center text-[10px] ${data.maestriaTS ? 'bg-fantasy-gold border-fantasy-gold text-fantasy-900' : 'border-fantasy-700 text-gray-500'}`} title="Maestria">★</button>
+                <div className="mt-3 pt-2 border-t border-fantasy-700 flex justify-between items-center">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">
+                    TS: <span className={`text-sm font-bold ml-1 ${bonusTS >= 0 ? 'text-white' : 'text-red-500'}`}>
+                      {bonusTS >= 0 ? `+${bonusTS}` : bonusTS}
+                    </span>
+                  </span>
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => toggleCompetenza(key, 'competenzaTS')} 
+                      className={`w-5 h-5 rounded border flex items-center justify-center text-[10px] transition-colors ${data.competenzaTS ? 'bg-fantasy-gold border-fantasy-gold text-fantasy-900' : 'border-fantasy-700 text-gray-500 hover:border-fantasy-gold'}`} 
+                      title="Competenza"
+                    >✓</button>
+                    <button 
+                      onClick={() => toggleCompetenza(key, 'maestriaTS')} 
+                      className={`w-5 h-5 rounded border flex items-center justify-center text-[10px] transition-colors ${data.maestriaTS ? 'bg-fantasy-gold border-fantasy-gold text-fantasy-900' : 'border-fantasy-700 text-gray-500 hover:border-fantasy-gold'}`} 
+                      title="Maestria"
+                    >★</button>
+                  </div>
                 </div>
-              </div>
 
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

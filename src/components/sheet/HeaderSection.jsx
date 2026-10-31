@@ -3,6 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../../store/useCharacterStore';
 import AutocompleteSelect from '../ui/AutocompleteSelect';
 import { getRazze, getClassi, getBackgrounds } from '../../services/open5eApi';
+import { applicaBonusRazziali, resettaBonusRazziali } from '../../utils/racialBonuses';
+
+// Lista delle razze principali consentite (formato normalizzato, senza prefissi)
+const ALLOWED_RACES = [
+  'dwarf', 'hill-dwarf', 'mountain-dwarf',
+  'elf', 'high-elf', 'wood-elf',
+  'halfling', 'lightfoot-halfling', 'stout-halfling',
+  'human', 'variant-human',
+  'dragonborn',
+  'gnome', 'forest-gnome', 'rock-gnome',
+  'half-elf',
+  'half-orc',
+  'tiefling',
+  'orc'
+];
 
 export default function HeaderSection({ personaggioId }) {
   const navigate = useNavigate();
@@ -19,7 +34,18 @@ export default function HeaderSection({ personaggioId }) {
       const [razzeData, classiData, bgData] = await Promise.all([
         getRazze(), getClassi(), getBackgrounds()
       ]);
-      setRazze(razzeData);
+      
+      // FILTRO INTELLIGENTE: normalizza lo slug e controlla se è una razza principale
+      const razzeFiltrate = razzeData.filter(r => {
+        if (!r.value) return false;
+        const norm = r.value.toLowerCase()
+          .replace(/^srd-2024[-_]?/i, '')
+          .replace(/^srd[-_]?/i, '')
+          .replace(/_/g, '-');
+        return ALLOWED_RACES.includes(norm);
+      });
+
+      setRazze(razzeFiltrate);
       setClassi(classiData);
       setBackgrounds(bgData);
     };
@@ -32,14 +58,32 @@ export default function HeaderSection({ personaggioId }) {
   const handleCancel = () => setIsEditing(false);
 
   const handleSelect = (campo, opzioneSelezionata) => {
-    aggiornaPersonaggio(personaggioId, {
+    const aggiornamenti = {
       identita: {
         ...personaggio.identita,
         [campo]: opzioneSelezionata.label,
         [`${campo}Slug`]: opzioneSelezionata.value,
         [`${campo}ApiUrl`]: opzioneSelezionata.api_url
       }
-    });
+    };
+
+    // Se stiamo cambiando la razza, applica i bonus razziali automatici
+    if (campo === 'razza') {
+      const nuoveCaratteristiche = applicaBonusRazziali(
+        personaggio.caratteristiche, 
+        opzioneSelezionata.value
+      );
+      
+      if (nuoveCaratteristiche) {
+        aggiornamenti.caratteristiche = nuoveCaratteristiche;
+      } else {
+        // Razza con bonus a scelta (es. Mezzelfo o Orco 2024)
+        aggiornamenti.caratteristiche = resettaBonusRazziali(personaggio.caratteristiche);
+        alert(`La razza "${opzioneSelezionata.label}" ha bonus da assegnare manualmente. Vai alla sezione "Caratteristiche" e modifica il campo "Razz." (evidenziato in oro).`);
+      }
+    }
+
+    aggiornaPersonaggio(personaggioId, aggiornamenti);
   };
 
   // --- MODALITÀ MODIFICA ---
@@ -84,27 +128,12 @@ export default function HeaderSection({ personaggioId }) {
               </div>
             </div>
 
-            {/* MODIFICA: HP Max con bottoni +/- */}
             <div>
               <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1">HP Massimi</label>
               <div className="flex items-center gap-2">
-                <button 
-                  type="button"
-                  onClick={() => aggiornaPersonaggio(personaggioId, { attributi: { ...personaggio.attributi, hpMax: Math.max(1, (personaggio.attributi.hpMax || 1) - 1) } })}
-                  className="fantasy-btn px-3 py-1 text-sm"
-                >
-                  −
-                </button>
-                <span className="text-xl font-fantasy text-fantasy-gold w-8 text-center">
-                  {personaggio.attributi.hpMax || 1}
-                </span>
-                <button 
-                  type="button"
-                  onClick={() => aggiornaPersonaggio(personaggioId, { attributi: { ...personaggio.attributi, hpMax: (personaggio.attributi.hpMax || 1) + 1 } })}
-                  className="fantasy-btn px-3 py-1 text-sm"
-                >
-                  +
-                </button>
+                <button type="button" onClick={() => aggiornaPersonaggio(personaggioId, { attributi: { ...personaggio.attributi, hpMax: Math.max(1, (personaggio.attributi.hpMax || 1) - 1) } })} className="fantasy-btn px-3 py-1 text-sm">−</button>
+                <span className="text-xl font-fantasy text-fantasy-gold w-8 text-center">{personaggio.attributi.hpMax || 1}</span>
+                <button type="button" onClick={() => aggiornaPersonaggio(personaggioId, { attributi: { ...personaggio.attributi, hpMax: (personaggio.attributi.hpMax || 1) + 1 } })} className="fantasy-btn px-3 py-1 text-sm">+</button>
               </div>
             </div>
 
