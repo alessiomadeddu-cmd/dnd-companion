@@ -5,7 +5,6 @@ import AutocompleteSelect from '../ui/AutocompleteSelect';
 import { getRazze, getClassi, getBackgrounds } from '../../services/open5eApi';
 import { applicaBonusRazziali, resettaBonusRazziali } from '../../utils/racialBonuses';
 
-// Lista delle razze principali consentite (formato normalizzato, senza prefissi)
 const ALLOWED_RACES = [
   'dwarf', 'hill-dwarf', 'mountain-dwarf',
   'elf', 'high-elf', 'wood-elf',
@@ -35,7 +34,6 @@ export default function HeaderSection({ personaggioId }) {
         getRazze(), getClassi(), getBackgrounds()
       ]);
       
-      // FILTRO INTELLIGENTE: normalizza lo slug e controlla se è una razza principale
       const razzeFiltrate = razzeData.filter(r => {
         if (!r.value) return false;
         const norm = r.value.toLowerCase()
@@ -54,9 +52,6 @@ export default function HeaderSection({ personaggioId }) {
 
   if (!personaggio) return null;
 
-  const handleSave = () => setIsEditing(false);
-  const handleCancel = () => setIsEditing(false);
-
   const handleSelect = (campo, opzioneSelezionata) => {
     const aggiornamenti = {
       identita: {
@@ -67,7 +62,6 @@ export default function HeaderSection({ personaggioId }) {
       }
     };
 
-    // Se stiamo cambiando la razza, applica i bonus razziali automatici
     if (campo === 'razza') {
       const nuoveCaratteristiche = applicaBonusRazziali(
         personaggio.caratteristiche, 
@@ -77,7 +71,6 @@ export default function HeaderSection({ personaggioId }) {
       if (nuoveCaratteristiche) {
         aggiornamenti.caratteristiche = nuoveCaratteristiche;
       } else {
-        // Razza con bonus a scelta (es. Mezzelfo o Orco 2024)
         aggiornamenti.caratteristiche = resettaBonusRazziali(personaggio.caratteristiche);
         alert(`La razza "${opzioneSelezionata.label}" ha bonus da assegnare manualmente. Vai alla sezione "Caratteristiche" e modifica il campo "Razz." (evidenziato in oro).`);
       }
@@ -86,7 +79,7 @@ export default function HeaderSection({ personaggioId }) {
     aggiornaPersonaggio(personaggioId, aggiornamenti);
   };
 
-  // --- MODALITÀ MODIFICA ---
+  // --- MODALITÀ MODIFICA (solo pulsante Chiudi) ---
   if (isEditing) {
     return (
       <div className="fantasy-card mb-4 relative overflow-hidden">
@@ -95,20 +88,19 @@ export default function HeaderSection({ personaggioId }) {
         <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
         <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
 
-        <div className="p-3 sm:p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-fantasy text-fantasy-gold">Modifica Identità</h2>
-            <div className="flex gap-2">
-              <button onClick={handleSave} className="fantasy-btn px-3 py-1 text-sm flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                Salva
-              </button>
-              <button onClick={handleCancel} className="bg-fantasy-700 text-gray-200 px-3 py-1 rounded hover:bg-fantasy-600 transition-colors text-sm flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                Annulla
-              </button>
-            </div>
-          </div>
+        {/* Pulsante Chiudi in alto a destra */}
+        <button 
+          onClick={() => setIsEditing(false)} 
+          className="absolute top-2 right-2 z-20 text-gray-400 hover:text-fantasy-gold p-1.5 rounded-full hover:bg-fantasy-900 transition-colors"
+          title="Chiudi modifica"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div className="p-3 sm:p-4 pr-12">
+          <h2 className="text-lg font-fantasy text-fantasy-gold mb-4">Modifica Identità</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
