@@ -76,8 +76,8 @@ export default function SkillsSection({ personaggioId }) {
             Bonus Competenza: <span className="text-fantasy-gold font-bold">+{bonusCompetenza}</span>
           </div>
 
-          {/* Griglia a 2 colonne */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Griglia: 1 colonna su mobile, 2 colonne da tablet in su */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {SKILL_LIST.map(({ key, nome }) => {
               const livelloSkill = personaggio.skill[key] || 0;
               const bonus = getSkillBonus(key);
@@ -86,28 +86,28 @@ export default function SkillsSection({ personaggioId }) {
               return (
                 <div 
                   key={key} 
-                  className={`bg-fantasy-900 border rounded px-2 py-1.5 flex items-center justify-between gap-1 ${
+                  className={`bg-fantasy-900 border rounded px-3 py-2 flex items-center justify-between gap-2 ${
                     livelloSkill > 0 ? 'border-fantasy-gold' : 'border-fantasy-700'
                   }`}
                   style={{ boxShadow: livelloSkill > 0 ? 'inset 0 0 6px rgba(212, 175, 55, 0.15)' : 'inset 0 0 6px rgba(0,0,0,0.3)' }}
                 >
                   {/* Nome + caratteristica */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-white truncate">{nome}</div>
-                    <div className="text-[9px] text-gray-500 uppercase">{charKey}</div>
+                    <div className="text-sm font-medium text-white truncate">{nome}</div>
+                    <div className="text-[10px] text-gray-500 uppercase">{charKey}</div>
                   </div>
 
                   {/* Bonus */}
-                  <div className={`text-sm font-bold font-fantasy w-8 text-center flex-shrink-0 ${bonus >= 0 ? 'text-fantasy-gold' : 'text-red-500'}`}>
+                  <div className={`text-base font-bold font-fantasy w-10 text-center flex-shrink-0 ${bonus >= 0 ? 'text-fantasy-gold' : 'text-red-500'}`}>
                     {bonus >= 0 ? `+${bonus}` : bonus}
                   </div>
 
                   {/* Tre pulsanti compatti */}
-                  <div className="flex gap-0.5 flex-shrink-0">
+                  <div className="flex gap-1 flex-shrink-0">
                     {/* ○ Nessuna competenza - grigio neutro */}
                     <button
                       onClick={() => setSkillLevel(key, 0)}
-                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                      className={`w-7 h-7 rounded flex items-center justify-center text-xs transition-colors ${
                         livelloSkill === 0
                           ? 'bg-fantasy-800 text-gray-400 border border-gray-600'
                           : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-gray-500'
@@ -119,7 +119,7 @@ export default function SkillsSection({ personaggioId }) {
                     {/* ✓ Competente - argento */}
                     <button
                       onClick={() => setSkillLevel(key, 1)}
-                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                      className={`w-7 h-7 rounded flex items-center justify-center text-xs transition-colors ${
                         livelloSkill === 1
                           ? 'bg-gray-300 text-gray-900 border border-gray-300'
                           : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-gray-400'
@@ -131,7 +131,7 @@ export default function SkillsSection({ personaggioId }) {
                     {/* ★ Esperto - dorato */}
                     <button
                       onClick={() => setSkillLevel(key, 3)}
-                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                      className={`w-7 h-7 rounded flex items-center justify-center text-xs transition-colors ${
                         livelloSkill === 3
                           ? 'bg-fantasy-gold text-fantasy-900 border border-fantasy-gold'
                           : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-fantasy-gold'
