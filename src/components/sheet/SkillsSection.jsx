@@ -1,81 +1,149 @@
 import { useState } from 'react';
 import { useCharacterStore } from '../../store/useCharacterStore';
-import { calcolaModificatore, calcolaPunteggioTotale, calcolaBonusSkill, SKILL_ABILITY_MAP } from '../../utils/calculations';
+import { calcolaBonusSkill, calcolaBonusCompetenza, SKILL_ABILITY_MAP, calcolaModificatore, calcolaPunteggioTotale } from '../../utils/calculations';
 
-const SKILL_LABELS = {
-  acrobazia: 'Acrobazia', addestrareAnimali: 'Addestrare Animali', arcanismo: 'Arcanismo',
-  atletica: 'Atletica', furtivita: 'Furtività', inganno: 'Inganno', indagine: 'Indagine',
-  intimidazione: 'Intimidazione', intuizione: 'Intuizione', intrattenere: 'Intrattenere',
-  storia: 'Storia', medicina: 'Medicina', natura: 'Natura', percezione: 'Percezione',
-  persuasione: 'Persuasione', rapiditaDiMano: 'Rapidità di Mano', religione: 'Religione', sopravvivenza: 'Sopravvivenza'
-};
-
-const COMPETENZA_ICONS = { 0: '—', 1: '✓', 2: '½', 3: '★' };
+const SKILL_LIST = [
+  { key: 'acrobazia', nome: 'Acrobazia' },
+  { key: 'addestrareAnimali', nome: 'Addestrare Animali' },
+  { key: 'arcanismo', nome: 'Arcanismo' },
+  { key: 'atletica', nome: 'Atletica' },
+  { key: 'furtivita', nome: 'Furtività' },
+  { key: 'inganno', nome: 'Inganno' },
+  { key: 'indagine', nome: 'Indagine' },
+  { key: 'intimidazione', nome: 'Intimidazione' },
+  { key: 'intuizione', nome: 'Intuizione' },
+  { key: 'intrattenere', nome: 'Intrattenere' },
+  { key: 'storia', nome: 'Storia' },
+  { key: 'medicina', nome: 'Medicina' },
+  { key: 'natura', nome: 'Natura' },
+  { key: 'percezione', nome: 'Percezione' },
+  { key: 'persuasione', nome: 'Persuasione' },
+  { key: 'rapiditaDiMano', nome: 'Rapidità di Mano' },
+  { key: 'religione', nome: 'Religione' },
+  { key: 'sopravvivenza', nome: 'Sopravvivenza' }
+];
 
 export default function SkillsSection({ personaggioId }) {
   const aggiornaPersonaggio = useCharacterStore((state) => state.aggiornaPersonaggio);
   const personaggio = useCharacterStore((state) => state.personaggi.find(p => p.id === personaggioId));
-  
-  // Stato per collassare la sezione
   const [isOpen, setIsOpen] = useState(true);
 
   if (!personaggio) return null;
 
-  const cicloCompetenza = (skill) => {
-    const attuale = personaggio.skill[skill];
-    const prossimo = (attuale + 1) % 4;
-    aggiornaPersonaggio(personaggioId, { skill: { ...personaggio.skill, [skill]: prossimo } });
+  const livello = personaggio.identita.livello || 1;
+  const bonusCompetenza = calcolaBonusCompetenza(livello);
+
+  const setSkillLevel = (skillKey, nuovoLivello) => {
+    aggiornaPersonaggio(personaggioId, {
+      skill: {
+        ...personaggio.skill,
+        [skillKey]: nuovoLivello
+      }
+    });
+  };
+
+  const getSkillBonus = (skillKey) => {
+    const charKey = SKILL_ABILITY_MAP[skillKey];
+    const charData = personaggio.caratteristiche[charKey];
+    if (!charData) return 0;
+    const punteggioTotale = calcolaPunteggioTotale(charData);
+    const mod = calcolaModificatore(punteggioTotale);
+    const livelloSkill = personaggio.skill[skillKey] || 0;
+    return calcolaBonusSkill(livelloSkill, mod, livello);
   };
 
   return (
-    <div className="fantasy-card mb-4">
-      {/* Header Collassabile */}
+    <div className="fantasy-card mb-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-t-2 border-r-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-l-2 border-fantasy-gold opacity-60"></div>
+      <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 border-b-2 border-r-2 border-fantasy-gold opacity-60"></div>
+
       <button 
         onClick={() => setIsOpen(!isOpen)} 
-        className="w-full flex justify-between items-center border-b border-fantasy-700 pb-2 mb-2 focus:outline-none"
+        className="w-full flex justify-between items-center border-b border-fantasy-700 pb-2 mb-3 focus:outline-none relative z-10"
       >
-        <h2 className="text-lg font-fantasy text-fantasy-gold">Competenze</h2>
+        <h2 className="text-lg font-fantasy text-fantasy-gold">Abilità</h2>
         <span className={`text-fantasy-gold transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
           ▼
         </span>
       </button>
-      
-      {/* Lista Competenze (visibile solo se isOpen) */}
-      {isOpen && (
-        <div className="space-y-1">
-          {Object.entries(SKILL_LABELS).map(([skillKey, label]) => {
-            const ability = SKILL_ABILITY_MAP[skillKey];
-            const abilityData = personaggio.caratteristiche[ability];
-            const abilityMod = calcolaModificatore(calcolaPunteggioTotale(abilityData));
-            const livelloCompetenza = personaggio.skill[skillKey];
-            const bonusTotale = calcolaBonusSkill(livelloCompetenza, abilityMod, personaggio.identita.livello);
 
-            return (
-              <div 
-                key={skillKey}
-                onClick={() => cicloCompetenza(skillKey)}
-                className="flex items-center justify-between p-2 bg-fantasy-900 rounded border border-fantasy-700 hover:border-fantasy-gold cursor-pointer transition-colors group"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`w-6 h-6 rounded border flex items-center justify-center text-xs font-bold transition-colors ${
-                    livelloCompetenza > 0 ? 'bg-fantasy-gold border-fantasy-gold text-fantasy-900' : 'border-fantasy-700 text-gray-500 group-hover:border-fantasy-gold'
-                  }`}>
-                    {COMPETENZA_ICONS[livelloCompetenza]}
+      {isOpen && (
+        <div>
+          {/* Info bonus competenza */}
+          <div className="text-xs text-gray-500 text-center mb-3">
+            Bonus Competenza: <span className="text-fantasy-gold font-bold">+{bonusCompetenza}</span>
+          </div>
+
+          {/* Griglia a 2 colonne */}
+          <div className="grid grid-cols-2 gap-2">
+            {SKILL_LIST.map(({ key, nome }) => {
+              const livelloSkill = personaggio.skill[key] || 0;
+              const bonus = getSkillBonus(key);
+              const charKey = SKILL_ABILITY_MAP[key];
+
+              return (
+                <div 
+                  key={key} 
+                  className={`bg-fantasy-900 border rounded px-2 py-1.5 flex items-center justify-between gap-1 ${
+                    livelloSkill > 0 ? 'border-fantasy-gold' : 'border-fantasy-700'
+                  }`}
+                  style={{ boxShadow: livelloSkill > 0 ? 'inset 0 0 6px rgba(212, 175, 55, 0.15)' : 'inset 0 0 6px rgba(0,0,0,0.3)' }}
+                >
+                  {/* Nome + caratteristica */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-white truncate">{nome}</div>
+                    <div className="text-[9px] text-gray-500 uppercase">{charKey}</div>
                   </div>
-                  <div>
-                    <span className="text-gray-200 text-sm">{label}</span>
-                    <span className="text-gray-600 text-xs ml-2">({ability})</span>
+
+                  {/* Bonus */}
+                  <div className={`text-sm font-bold font-fantasy w-8 text-center flex-shrink-0 ${bonus >= 0 ? 'text-fantasy-gold' : 'text-red-500'}`}>
+                    {bonus >= 0 ? `+${bonus}` : bonus}
+                  </div>
+
+                  {/* Tre pulsanti compatti */}
+                  <div className="flex gap-0.5 flex-shrink-0">
+                    {/* ○ Nessuna competenza - grigio neutro */}
+                    <button
+                      onClick={() => setSkillLevel(key, 0)}
+                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                        livelloSkill === 0
+                          ? 'bg-fantasy-800 text-gray-400 border border-gray-600'
+                          : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-gray-500'
+                      }`}
+                      title="Nessuna competenza"
+                    >
+                      ○
+                    </button>
+                    {/* ✓ Competente - argento */}
+                    <button
+                      onClick={() => setSkillLevel(key, 1)}
+                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                        livelloSkill === 1
+                          ? 'bg-gray-300 text-gray-900 border border-gray-300'
+                          : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-gray-400'
+                      }`}
+                      title="Competente"
+                    >
+                      ✓
+                    </button>
+                    {/* ★ Esperto - dorato */}
+                    <button
+                      onClick={() => setSkillLevel(key, 3)}
+                      className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                        livelloSkill === 3
+                          ? 'bg-fantasy-gold text-fantasy-900 border border-fantasy-gold'
+                          : 'bg-fantasy-800 text-gray-600 border border-fantasy-700 hover:border-fantasy-gold'
+                      }`}
+                      title="Esperto (doppia competenza)"
+                    >
+                      ★
+                    </button>
                   </div>
                 </div>
-                <span className={`font-bold text-sm ${bonusTotale >= 0 ? 'text-white' : 'text-red-400'}`}>
-                  {bonusTotale >= 0 ? `+${bonusTotale}` : bonusTotale}
-                </span>
-              </div>
-            );
-          })}
-          
-          <div className="mt-2 text-[10px] text-gray-600 text-center">
-            Tocca una skill per cambiare: Nessuna (—) → Competenza (✓) → Metà (½) → Maestria (★)
+              );
+            })}
           </div>
         </div>
       )}
